@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import AnimatedBackground from './AnimatedBackground';
 
 const AboutPage: React.FC = () => {
     const team = [
@@ -58,7 +59,8 @@ const AboutPage: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black">
+        <div className="relative min-h-screen bg-black">
+            <AnimatedBackground />
             <Navbar />
 
             {/* Hero Section */}

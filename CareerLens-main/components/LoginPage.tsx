@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import AnimatedBackground from './AnimatedBackground';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -21,7 +22,8 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black flex flex-col">
+        <div className="relative min-h-screen bg-black flex flex-col">
+            <AnimatedBackground />
             {/* Header */}
             <header className="w-full px-6 py-6">
                 <Link to="/" className="flex items-center gap-3 text-white w-fit">

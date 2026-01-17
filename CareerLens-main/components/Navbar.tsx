@@ -21,7 +21,10 @@ const Navbar: React.FC = () => {
                             <Link className="text-sm font-medium text-neutral-400 hover:text-white transition-colors duration-200" to="/pricing">Pricing</Link>
                             <Link className="text-sm font-medium text-neutral-400 hover:text-white transition-colors duration-200" to="/about">About Us</Link>
                         </nav>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 items-center">
+                            <Link to="/profile" className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-all duration-200" title="Profile">
+                                <span className="material-symbols-outlined text-xl">person</span>
+                            </Link>
                             <Link to="/login" className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-transparent border border-neutral-700 text-white hover:border-neutral-500 hover:bg-neutral-900 transition-all duration-200 text-sm font-medium">
                                 <span className="truncate">Log In</span>
                             </Link>

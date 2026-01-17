@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import AnimatedBackground from './AnimatedBackground';
 
 const PricingPage: React.FC = () => {
     const [isAnnual, setIsAnnual] = useState(true);
@@ -79,7 +80,8 @@ const PricingPage: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-black">
+        <div className="relative min-h-screen bg-black">
+            <AnimatedBackground />
             <Navbar />
 
             {/* Hero Section */}
@@ -116,8 +118,8 @@ const PricingPage: React.FC = () => {
                             <div
                                 key={index}
                                 className={`relative p-8 rounded-2xl border transition-all duration-200 ${plan.popular
-                                        ? 'bg-white text-black border-white'
-                                        : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
+                                    ? 'bg-white text-black border-white'
+                                    : 'bg-neutral-900 border-neutral-800 hover:border-neutral-700'
                                     }`}
                             >
                                 {plan.popular && (
@@ -163,8 +165,8 @@ const PricingPage: React.FC = () => {
                                 <Link
                                     to={plan.name === 'Enterprise' ? '/contact' : '/selection'}
                                     className={`block w-full py-3 px-6 rounded-xl text-center font-semibold transition-all duration-200 ${plan.popular
-                                            ? 'bg-black text-white hover:bg-neutral-800'
-                                            : 'bg-white text-black hover:bg-neutral-200'
+                                        ? 'bg-black text-white hover:bg-neutral-800'
+                                        : 'bg-white text-black hover:bg-neutral-200'
                                         }`}
                                 >
                                     {plan.cta}
