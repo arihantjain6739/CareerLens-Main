@@ -112,7 +112,6 @@ router.post('/:sessionId/submit', async (req, res) => {
     // Validate answers and calculate score
     let correctCount = 0;
     const validatedAnswers = [];
-
     for (const answer of answers) {
       const question = await Question.findById(answer.questionId);
       

@@ -9,9 +9,9 @@ import Footer from './Footer';
 
 const Home: React.FC = () => {
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden font-sans">
+    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden font-sans bg-black">
       <Navbar />
-      <main className="flex-1 flex flex-col items-center w-full">
+      <main className="flex-1 flex flex-col items-center w-full bg-black">
         <Hero />
         <TrustedBy />
         <Features />

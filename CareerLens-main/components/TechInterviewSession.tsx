@@ -1,6 +1,27 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+interface TechQuestion {
+  question: string;
+  type?: 'conceptual' | 'coding';
+  description?: string;
+  constraints?: string[];
+  examples?: Array<{
+    input: string;
+    output: string;
+    explanation?: string;
+  }>;
+  testCases?: Array<{
+    input: string;
+    expectedOutput: string;
+    explanation?: string;
+  }>;
+  starterCode?: string;
+  hints?: string[];
+  difficulty?: string;
+  tags?: string[];
+}
+
 const DEFAULT_TECH_QUESTIONS = [
   "Tell me about yourself and your background.",
   "Why are you interested in this role and our company?",
@@ -23,34 +44,53 @@ const TechInterviewSession: React.FC = () => {
   const [questionTimer, setQuestionTimer] = useState<number>(60); // seconds per question
   const timerRef = useRef<number | null>(null);
   const [mediaError, setMediaError] = useState<string | null>(null);
-  const [AI_QUESTIONS, setAI_QUESTIONS] = useState<string[]>(DEFAULT_TECH_QUESTIONS);
+  const [TECH_QUESTIONS, setTECH_QUESTIONS] = useState<TechQuestion[]>([]);
   const [questionsLoaded, setQuestionsLoaded] = useState(false);
+  const [userCode, setUserCode] = useState<string>("");
+  const [showHints, setShowHints] = useState(false);
 
-  // fetch 10 random HR questions from backend and store in AI_QUESTIONS
+  // fetch 10 random tech questions from backend
   useEffect(() => {
-    const fetchHRQuestions = async (count = 10) => {
+    const fetchTechQuestions = async (count = 10) => {
       try {
         const API_BASE = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000';
         const res = await fetch(`${API_BASE}/api/techquestions/random?count=${count}`);
         if (!res.ok) {
-          console.error('Failed to fetch HR questions', res.status);
+          console.error('Failed to fetch tech questions', res.status);
           return;
         }
         const body = await res.json();
         if (!body || !Array.isArray(body.data) || body.data.length === 0) return;
-        const qs: string[] = body.data.map((d: any) => d.question).filter(Boolean);
-        if (qs.length) {
-          setAI_QUESTIONS(qs);
+        
+        // Map the fetched questions to TechQuestion type
+        const questions: TechQuestion[] = body.data.map((d: any) => ({
+          question: d.question,
+          type: d.type || 'conceptual',
+          description: d.description,
+          constraints: d.constraints,
+          examples: d.examples,
+          testCases: d.testCases,
+          starterCode: d.starterCode,
+          hints: d.hints,
+          difficulty: d.difficulty,
+          tags: d.tags
+        }));
+        
+        if (questions.length) {
+          setTECH_QUESTIONS(questions);
           setQuestionsLoaded(true);
-          // reset current question to ensure first fetched question is shown
           setCurrentQ(0);
+          // Initialize code editor with starter code if available
+          if (questions[0]?.starterCode) {
+            setUserCode(questions[0].starterCode);
+          }
         }
       } catch (err) {
-        console.error('Error fetching HR questions', err);
+        console.error('Error fetching tech questions', err);
       }
     };
 
-    fetchHRQuestions(10);
+    fetchTechQuestions(10);
   }, []);
 
   useEffect(() => {
@@ -88,7 +128,7 @@ const TechInterviewSession: React.FC = () => {
 
   // trigger speak once both media is started (cameraEnabled true) and questions loaded
   useEffect(() => {
-    if (questionsLoaded && cameraEnabled && AI_QUESTIONS.length > 0) {
+    if (questionsLoaded && cameraEnabled && TECH_QUESTIONS.length > 0) {
       setCurrentQ(0);
       try { speakQuestion(0); } catch (e) { /* ignore */ }
     }
@@ -126,7 +166,9 @@ const TechInterviewSession: React.FC = () => {
 
   const speakQuestion = (index: number) => {
     try {
-      const text = AI_QUESTIONS[index];
+      const q = TECH_QUESTIONS[index];
+      if (!q) return;
+      const text = q.type === 'coding' ? `Coding Problem: ${q.question}. ${q.description}` : q.question;
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
@@ -210,9 +252,16 @@ const TechInterviewSession: React.FC = () => {
   const handleNext = () => {
     clearQuestionTimer();
     setQuestionTimer(60);
-    if (currentQ < AI_QUESTIONS.length - 1) {
+    setShowHints(false);
+    if (currentQ < TECH_QUESTIONS.length - 1) {
       setCurrentQ((i) => {
         const next = i + 1;
+        const nextQuestion = TECH_QUESTIONS[next];
+        if (nextQuestion?.starterCode) {
+          setUserCode(nextQuestion.starterCode);
+        } else {
+          setUserCode("");
+        }
         speakQuestion(next);
         return next;
       });
@@ -222,9 +271,16 @@ const TechInterviewSession: React.FC = () => {
   const handlePrev = () => {
     clearQuestionTimer();
     setQuestionTimer(60);
+    setShowHints(false);
     if (currentQ > 0) {
       setCurrentQ((i) => {
         const prev = i - 1;
+        const prevQuestion = TECH_QUESTIONS[prev];
+        if (prevQuestion?.starterCode) {
+          setUserCode(prevQuestion.starterCode);
+        } else {
+          setUserCode("");
+        }
         speakQuestion(prev);
         return prev;
       });
@@ -269,7 +325,8 @@ const TechInterviewSession: React.FC = () => {
     else startRecording();
   };
 
-  const progressPercent = Math.round(((currentQ + 1) / AI_QUESTIONS.length) * 100);
+  const progressPercent = Math.round(((currentQ + 1) / TECH_QUESTIONS.length) * 100);
+  const currentQuestion = TECH_QUESTIONS[currentQ] || { question: "Loading...", type: 'conceptual' };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -307,12 +364,12 @@ const TechInterviewSession: React.FC = () => {
                 <div className="text-sm text-gray-600">
                   Time left: <span className="font-mono">{String(questionTimer).padStart(2, "0")}s</span>
                 </div>
-                <div className="text-sm text-gray-600">Question {currentQ + 1} / {AI_QUESTIONS.length}</div>
+                <div className="text-sm text-gray-600">Question {currentQ + 1} / {TECH_QUESTIONS.length}</div>
               </div>
 
               <div className="flex items-center gap-2">
                 <button onClick={handlePrev} disabled={currentQ === 0} className="px-3 py-2 bg-white border rounded disabled:opacity-50">Prev</button>
-                <button onClick={handleNext} disabled={currentQ === AI_QUESTIONS.length - 1} className="px-3 py-2 bg-white border rounded disabled:opacity-50">Next</button>
+                <button onClick={handleNext} disabled={currentQ === TECH_QUESTIONS.length - 1} className="px-3 py-2 bg-white border rounded disabled:opacity-50">Next</button>
                 <button onClick={handleEndInterview} className="px-3 py-2 bg-gray-200 rounded">End Interview</button>
               </div>
             </div>
@@ -341,21 +398,132 @@ const TechInterviewSession: React.FC = () => {
         </div>
 
         <aside className="space-y-4">
-          <div className="bg-white rounded-lg shadow p-4 sticky top-6">
+          <div className="bg-white rounded-lg shadow p-4 sticky top-6 max-h-[calc(100vh-3rem)] overflow-y-auto">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-lg font-semibold">
-                AI
+                {currentQuestion.type === 'coding' ? '💻' : 'AI'}
               </div>
               <div>
-                <div className="font-semibold">AI Interviewer</div>
-                <div className="text-sm text-gray-500">Simulated interviewer — asks questions and listens to answers.</div>
+                <div className="font-semibold">{currentQuestion.type === 'coding' ? 'Coding Challenge' : 'AI Interviewer'}</div>
+                <div className="text-sm text-gray-500">
+                  {currentQuestion.difficulty && (
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                      currentQuestion.difficulty === 'easy' ? 'bg-green-100 text-green-700' :
+                      currentQuestion.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {currentQuestion.difficulty}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
+            {/* Question Display */}
             <div className="border rounded p-3 mb-3 bg-gray-50">
-              <div className="text-sm text-gray-700 mb-2 font-medium">Current Question</div>
-              <div className="text-sm">{AI_QUESTIONS[currentQ]}</div>
+              <div className="text-sm text-gray-700 mb-2 font-medium flex items-center justify-between">
+                <span>Current Question</span>
+                {currentQuestion.tags && currentQuestion.tags.length > 0 && (
+                  <div className="flex gap-1 flex-wrap">
+                    {currentQuestion.tags.slice(0, 2).map((tag, idx) => (
+                      <span key={idx} className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="text-sm font-semibold text-gray-900 mb-2">{currentQuestion.question}</div>
+              
+              {currentQuestion.type === 'coding' && currentQuestion.description && (
+                <div className="text-sm text-gray-700 mt-3 whitespace-pre-line">
+                  {currentQuestion.description}
+                </div>
+              )}
             </div>
+
+            {/* Constraints */}
+            {currentQuestion.type === 'coding' && currentQuestion.constraints && currentQuestion.constraints.length > 0 && (
+              <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <div className="text-sm font-semibold text-yellow-800 mb-2">Constraints</div>
+                <ul className="text-xs text-yellow-900 space-y-1">
+                  {currentQuestion.constraints.map((constraint, idx) => (
+                    <li key={idx} className="flex items-start gap-1">
+                      <span>•</span>
+                      <span>{constraint}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Examples */}
+            {currentQuestion.type === 'coding' && currentQuestion.examples && currentQuestion.examples.length > 0 && (
+              <div className="mb-3">
+                <div className="text-sm font-semibold text-gray-700 mb-2">Examples</div>
+                {currentQuestion.examples.map((example, idx) => (
+                  <div key={idx} className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                    <div className="font-mono mb-1">
+                      <span className="font-semibold">Input:</span> {example.input}
+                    </div>
+                    <div className="font-mono mb-1">
+                      <span className="font-semibold">Output:</span> {example.output}
+                    </div>
+                    {example.explanation && (
+                      <div className="text-gray-600 mt-1">
+                        <span className="font-semibold">Explanation:</span> {example.explanation}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Test Cases */}
+            {currentQuestion.type === 'coding' && currentQuestion.testCases && currentQuestion.testCases.length > 0 && (
+              <div className="mb-3">
+                <div className="text-sm font-semibold text-gray-700 mb-2">Test Cases ({currentQuestion.testCases.length})</div>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {currentQuestion.testCases.map((testCase, idx) => (
+                    <div key={idx} className="p-2 bg-green-50 border border-green-200 rounded text-xs">
+                      <div className="font-semibold text-green-800 mb-1">Test Case {idx + 1}</div>
+                      <div className="font-mono text-gray-700 mb-1">
+                        <span className="font-semibold">Input:</span> {testCase.input}
+                      </div>
+                      <div className="font-mono text-gray-700">
+                        <span className="font-semibold">Expected:</span> {testCase.expectedOutput}
+                      </div>
+                      {testCase.explanation && (
+                        <div className="text-gray-600 mt-1">
+                          {testCase.explanation}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Hints */}
+            {currentQuestion.type === 'coding' && currentQuestion.hints && currentQuestion.hints.length > 0 && (
+              <div className="mb-3">
+                <button
+                  onClick={() => setShowHints(!showHints)}
+                  className="w-full px-3 py-2 bg-purple-100 text-purple-700 rounded text-sm font-medium hover:bg-purple-200"
+                >
+                  {showHints ? 'Hide' : 'Show'} Hints ({currentQuestion.hints.length})
+                </button>
+                {showHints && (
+                  <div className="mt-2 space-y-2">
+                    {currentQuestion.hints.map((hint, idx) => (
+                      <div key={idx} className="p-2 bg-purple-50 border border-purple-200 rounded text-xs text-purple-900">
+                        <span className="font-semibold">Hint {idx + 1}:</span> {hint}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mb-3">
               <div className="text-xs text-gray-500 mb-1">Progress</div>
@@ -374,7 +542,7 @@ const TechInterviewSession: React.FC = () => {
               </button>
               <button
                 onClick={() => handleNext()}
-                disabled={currentQ === AI_QUESTIONS.length - 1}
+                disabled={currentQ === TECH_QUESTIONS.length - 1}
                 className="w-full px-3 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
               >
                 Ask Next Question
@@ -382,14 +550,16 @@ const TechInterviewSession: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-4">
-            <h4 className="font-semibold mb-2">Tips</h4>
-            <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
-              <li>Speak clearly and concisely.</li>
-              <li>Use examples to support your answers.</li>
-              <li>Keep answers around 45–60 seconds.</li>
-            </ul>
-          </div>
+          {currentQuestion.type !== 'coding' && (
+            <div className="bg-white rounded-lg shadow p-4">
+              <h4 className="font-semibold mb-2">Tips</h4>
+              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                <li>Speak clearly and concisely.</li>
+                <li>Use examples to support your answers.</li>
+                <li>Keep answers around 45–60 seconds.</li>
+              </ul>
+            </div>
+          )}
         </aside>
       </div>
     </div>

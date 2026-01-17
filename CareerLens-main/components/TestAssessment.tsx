@@ -466,121 +466,344 @@ const TestAssessment: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-xl">C</span>
               </div>
-              <span className="text-xl font-bold text-gray-900">CareerReady</span>
+              <div>
+                <div className="text-xl font-bold text-gray-900">CareerReady Assessment</div>
+                <div className="text-xs text-gray-500">Question {currentQuestion + 1} of {questions.length}</div>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-              </svg>
-              <span className="text-gray-600 font-medium">{formatTime(timeLeft)}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
+                <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+                <span className="text-gray-700 font-semibold text-lg font-mono">{formatTime(timeLeft)}</span>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(question.difficulty)}`}>
+                {question.difficulty}
+              </span>
+            </div>
+          </div>
+          {/* Progress Bar */}
+          <div className="mt-3">
+            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+            </div>
+            <div className="flex justify-between mt-1 text-xs text-gray-500">
+              <span>{answeredCount} answered</span>
+              <span>{Math.round(progress)}% complete</span>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">Question {currentQuestion + 1} of {questions.length}</span>
-            <span className="text-sm font-medium text-gray-600">{answeredCount} answered</span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
-          </div>
-        </div>
-
-        {/* Question Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex-1">
-              <div className="prose prose-sm max-w-none">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">{question.question.split('\n')[0]}</h2>
-                <p className="text-gray-700 whitespace-pre-line leading-relaxed">{question.question.split('\n').slice(1).join('\n')}</p>
+      {/* Main Content - Split Layout for Coding Questions */}
+      {question.type === 'coding' ? (
+        <div className="max-w-[1800px] mx-auto px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100vh-200px)]">
+            {/* Left Panel - Question Details */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  Coding Challenge
+                </h2>
               </div>
-            </div>
-          </div>
-
-          {/* Examples for Coding Questions */}
-          {question.type === 'coding' && question.examples && (
-            <div className="mb-6 space-y-4">
-              {question.examples.map((example, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Example {idx + 1}:</p>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="font-semibold">Input:</span> <code className="bg-white px-2 py-1 rounded">{example.input}</code></p>
-                    <p><span className="font-semibold">Output:</span> <code className="bg-white px-2 py-1 rounded">{example.output}</code></p>
-                    {example.explanation && <p className="text-gray-600"><span className="font-semibold">Explanation:</span> {example.explanation}</p>}
+              
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Problem Statement */}
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">{question.question.split('\n')[0]}</h3>
+                  <div className="prose prose-sm max-w-none">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {question.question.split('\n').slice(1).join('\n')}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
 
-          {/* Constraints for Coding Questions */}
-          {question.type === 'coding' && question.constraints && (
-            <div className="mb-6">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Constraints:</p>
-              <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                {question.constraints.map((constraint, idx) => <li key={idx}>{constraint}</li>)}
-              </ul>
-            </div>
-          )}
-
-          {/* Code Editor for Coding Questions */}
-          {question.type === 'coding' ? (
-            <div className="space-y-4">
-              <div className="border-2 border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-900 px-4 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1.5">
-                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                {/* Examples Section */}
+                {question.examples && question.examples.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <h4 className="text-lg font-semibold text-gray-800">Examples</h4>
                     </div>
-                    <span className="text-xs text-gray-400 ml-2">{question.language || 'javascript'}</span>
+                    <div className="space-y-3">
+                      {question.examples.map((example, idx) => (
+                        <div key={idx} className="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4">
+                          <div className="text-sm font-semibold text-blue-900 mb-2">Example {idx + 1}</div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-start gap-2">
+                              <span className="font-semibold text-gray-700 min-w-[60px]">Input:</span>
+                              <code className="flex-1 bg-white px-3 py-1.5 rounded font-mono text-xs border border-blue-200">
+                                {example.input}
+                              </code>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="font-semibold text-gray-700 min-w-[60px]">Output:</span>
+                              <code className="flex-1 bg-white px-3 py-1.5 rounded font-mono text-xs border border-blue-200">
+                                {example.output}
+                              </code>
+                            </div>
+                            {example.explanation && (
+                              <div className="mt-2 pt-2 border-t border-blue-200">
+                                <span className="text-gray-600 text-xs">
+                                  <strong>Explanation:</strong> {example.explanation}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={handleRunCode} disabled={timeLeft === 0 || showResults} className="text-xs px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Run Code</button>
-                    <button onClick={handleSubmitCode} disabled={!testResults?.passed || timeLeft === 0 || showResults} className="text-xs px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Submit</button>
+                )}
+
+                {/* Constraints Section */}
+                {question.constraints && question.constraints.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <h4 className="text-lg font-semibold text-gray-800">Constraints</h4>
+                    </div>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <ul className="space-y-2">
+                        {question.constraints.map((constraint, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-yellow-900">
+                            <span className="text-yellow-600 mt-0.5">•</span>
+                            <code className="bg-yellow-100 px-2 py-0.5 rounded text-xs font-mono flex-1">
+                              {constraint}
+                            </code>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                </div>
-                <textarea value={userCode} onChange={(e) => handleCodeChange(e.target.value)} className="w-full h-64 p-4 bg-gray-900 text-gray-100 font-mono text-sm leading-relaxed focus:outline-none resize-none" spellCheck={false} placeholder="Write your solution here..." />
+                )}
+
+                {/* Test Cases Section */}
+                {question.testCases && question.testCases.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                      </svg>
+                      <h4 className="text-lg font-semibold text-gray-800">Test Cases</h4>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                        {question.testCases.length} cases
+                      </span>
+                    </div>
+                    <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                      {question.testCases.map((testCase, idx) => (
+                        <div key={idx} className="bg-green-50 border border-green-200 rounded-lg p-4 hover:shadow-md transition">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-green-900">Test Case {idx + 1}</span>
+                            <span className="text-xs bg-green-200 text-green-800 px-2 py-0.5 rounded">Required</span>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex items-start gap-2">
+                              <span className="font-semibold text-gray-700 min-w-[80px]">Input:</span>
+                              <code className="flex-1 bg-white px-3 py-1.5 rounded font-mono text-xs border border-green-200">
+                                {testCase.input}
+                              </code>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="font-semibold text-gray-700 min-w-[80px]">Expected:</span>
+                              <code className="flex-1 bg-white px-3 py-1.5 rounded font-mono text-xs border border-green-200">
+                                {testCase.output}
+                              </code>
+                            </div>
+                            {testCase.explanation && (
+                              <div className="mt-2 pt-2 border-t border-green-200">
+                                <span className="text-gray-600 text-xs">{testCase.explanation}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Right Panel - Code Editor */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+              <div className="bg-gray-900 px-4 py-3 flex items-center justify-between border-b border-gray-700">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <span className="text-sm text-gray-300 font-medium">{question.language || 'javascript'}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setUserCode(question.starterCode || '')}
+                    className="text-xs px-3 py-1.5 bg-gray-700 text-gray-300 rounded hover:bg-gray-600 transition-colors"
+                  >
+                    Reset
+                  </button>
+                  <button 
+                    onClick={handleRunCode} 
+                    disabled={timeLeft === 0 || showResults} 
+                    className="text-xs px-4 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    <span>▶</span> Run
+                  </button>
+                  <button 
+                    onClick={handleSubmitCode} 
+                    disabled={!testResults?.passed || timeLeft === 0 || showResults} 
+                    className="text-xs px-4 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    <span>✓</span> Submit
+                  </button>
+                </div>
+              </div>
+              
+              <textarea 
+                value={userCode} 
+                onChange={(e) => handleCodeChange(e.target.value)} 
+                className="flex-1 w-full p-4 bg-gray-900 text-gray-100 font-mono text-sm leading-relaxed focus:outline-none resize-none" 
+                spellCheck={false} 
+                placeholder="// Write your solution here..."
+                style={{ minHeight: '400px' }}
+              />
 
               {/* Test Results */}
               {testResults && (
-                <div className={`p-4 rounded-lg ${testResults.passed ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                  <div className="flex items-center gap-2">
+                <div className={`p-4 border-t-2 ${testResults.passed ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500'}`}>
+                  <div className="flex items-center gap-3">
                     {testResults.passed ? (
-                      <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     ) : (
-                      <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
                     )}
-                    <span className={`font-semibold ${testResults.passed ? 'text-green-700' : 'text-red-700'}`}>{testResults.message}</span>
+                    <div className="flex-1">
+                      <div className={`font-semibold ${testResults.passed ? 'text-green-700' : 'text-red-700'}`}>
+                        {testResults.message}
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {testResults.passed ? 'Your solution passed all test cases!' : 'Some test cases failed. Review your code and try again.'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-          ) : (
-            /* MCQ Options */
+          </div>
+
+          {/* Navigation for Coding Questions */}
+          <div className="mt-6 flex items-center justify-between">
+            <button 
+              onClick={handlePrevious} 
+              disabled={currentQuestion === 0} 
+              className="bg-white text-gray-700 font-semibold py-3 px-6 rounded-xl border-2 border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ← Previous
+            </button>
+
+            <div className="flex gap-2 flex-wrap justify-center">
+              {questions.map((_, index) => (
+                <button 
+                  key={index} 
+                  onClick={() => { 
+                    setCurrentQuestion(index); 
+                    setSelectedAnswer(answers[index]);
+                    const q = questions[index];
+                    if (q.type === 'coding') {
+                      setUserCode(q.starterCode || '');
+                      setTestResults(null);
+                    }
+                  }} 
+                  className={`w-10 h-10 rounded-lg font-semibold transition-all ${
+                    index === currentQuestion 
+                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg scale-110' 
+                      : answers[index] !== null 
+                      ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+
+            {currentQuestion === questions.length - 1 ? (
+              <button 
+                onClick={handleSubmit} 
+                disabled={showResults || timeLeft === 0} 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-8 rounded-xl hover:shadow-lg transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Submit Assessment
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext} 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all"
+              >
+                Next →
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* MCQ Layout */
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{question.question.split('\n')[0]}</h2>
+              <div className="prose prose-sm max-w-none">
+                <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                  {question.question.split('\n').slice(1).join('\n')}
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-3">
               {question.options?.map((option, index) => (
-                <button key={index} onClick={() => handleAnswer(index)} className={`w-full p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${selectedAnswer === index ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>
+                <button 
+                  key={index} 
+                  onClick={() => handleAnswer(index)} 
+                  className={`w-full p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                    selectedAnswer === index 
+                      ? 'border-blue-600 bg-blue-50 shadow-md' 
+                      : 'border-gray-200 bg-white hover:border-gray-300'
+                  }`}
+                >
                   <div className="flex items-center gap-4">
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedAnswer === index ? 'border-blue-600 bg-blue-600' : 'border-gray-300'}`}>
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                      selectedAnswer === index 
+                        ? 'border-blue-600 bg-blue-600' 
+                        : 'border-gray-300'
+                    }`}>
                       {selectedAnswer === index ? (
-                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
                       ) : (
                         <span className="text-gray-400 font-semibold">{String.fromCharCode(65 + index)}</span>
                       )}
@@ -590,29 +813,59 @@ const TestAssessment: React.FC = () => {
                 </button>
               ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Question Navigation */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-2">
+          {/* Question Navigation Dots */}
+          <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
             {questions.map((_, index) => (
-              <button key={index} onClick={() => { setCurrentQuestion(index); setSelectedAnswer(answers[index]); }} className={`w-10 h-10 rounded-lg font-semibold transition-colors ${index === currentQuestion ? 'bg-blue-600 text-white' : answers[index] !== null ? 'bg-green-100 text-green-700 hover:bg-green-200' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'}`}>{index + 1}</button>
+              <button 
+                key={index} 
+                onClick={() => { 
+                  setCurrentQuestion(index); 
+                  setSelectedAnswer(answers[index]); 
+                }} 
+                className={`w-10 h-10 rounded-lg font-semibold transition-all ${
+                  index === currentQuestion 
+                    ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg scale-110' 
+                    : answers[index] !== null 
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-300' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'
+                }`}
+              >
+                {index + 1}
+              </button>
             ))}
           </div>
-        </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-between">
-          <button onClick={handlePrevious} disabled={currentQuestion === 0} className="bg-white text-gray-700 font-semibold py-3 px-6 rounded-xl border-2 border-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between">
+            <button 
+              onClick={handlePrevious} 
+              disabled={currentQuestion === 0} 
+              className="bg-white text-gray-700 font-semibold py-3 px-6 rounded-xl border-2 border-gray-300 hover:bg-gray-50 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              ← Previous
+            </button>
 
-          {currentQuestion === questions.length - 1 ? (
-            <button onClick={handleSubmit} disabled={showResults || timeLeft === 0} className="bg-blue-600 text-white font-semibold py-3 px-8 rounded-xl hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">Submit Assessment</button>
-          ) : (
-            <button onClick={handleNext} className="bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:bg-blue-700 transition-colors">Next</button>
-          )}
+            {currentQuestion === questions.length - 1 ? (
+              <button 
+                onClick={handleSubmit} 
+                disabled={showResults || timeLeft === 0} 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-8 rounded-xl hover:shadow-lg transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Submit Assessment
+              </button>
+            ) : (
+              <button 
+                onClick={handleNext} 
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all"
+              >
+                Next →
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
